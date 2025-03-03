@@ -57,9 +57,11 @@ def count_tokens(dataset_path, model_path, dataset_type):
             finetuning_task="image-classification",
         )
 
-        patch_size = model_config.patch_size
+        patch_size = model_config.patch_size if hasattr(model_config, 'patch_size')  else 16
         image_size = model_config.image_size
         num_patches = (image_size // patch_size) ** 2
+        if hasattr(model_config, 'num_channels'):
+            num_patches *= model_config.num_channels
 
         token_size = num_patches + 1
 
