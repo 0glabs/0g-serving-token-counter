@@ -52,14 +52,18 @@ def count_tokens(dataset_path, model_path, dataset_type):
         total_tokens = 0
 
         num_labels = 0
-        if "train" in dataset:
-            column_names = set(dataset["train"].column_names)
+        for _, ds in dataset.items():
+            column_names = set(ds.column_names)
             if "label" in column_names:
-                num_labels = len(set(dataset["train"]["label"]))
+                num_labels = len(set(ds["label"]))
+                break
             elif "labels" in column_names:
-                num_labels = len(set(dataset["train"]["labels"]))
-            else:
-                print(f"Not found label in dataset", file=sys.stderr)
+                num_labels = len(set(ds["labels"]))
+                break
+
+        if num_labels == 0:
+            print(f"Not found label in dataset", file=sys.stderr)
+
         model_config = transformers.AutoConfig.from_pretrained(
             model_path,
             num_labels=num_labels,
