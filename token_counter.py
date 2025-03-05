@@ -51,16 +51,31 @@ def count_tokens(dataset_path, model_path, dataset_type):
         dataset = load_from_disk(dataset_path)
         total_tokens = 0
 
+        num_labels = 0
+        for _, ds in dataset.items():
+            column_names = set(ds.column_names)
+            if "label" in column_names:
+                num_labels = len(set(ds["label"]))
+                break
+            elif "labels" in column_names:
+                num_labels = len(set(ds["labels"]))
+                break
+
+        if num_labels == 0:
+            print(f"Not found label in dataset", file=sys.stderr)
+
         model_config = transformers.AutoConfig.from_pretrained(
             model_path,
-            num_labels=len(set(dataset["train"]["label"])),
+            num_labels=num_labels,
             finetuning_task="image-classification",
         )
 
-        patch_size = model_config.patch_size if hasattr(model_config, 'patch_size')  else 16
+        patch_size = (
+            model_config.patch_size if hasattr(model_config, "patch_size") else 16
+        )
         image_size = model_config.image_size
         num_patches = (image_size // patch_size) ** 2
-        if hasattr(model_config, 'num_channels'):
+        if hasattr(model_config, "num_channels"):
             num_patches *= model_config.num_channels
 
         token_size = num_patches + 1
