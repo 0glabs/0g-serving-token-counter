@@ -51,9 +51,18 @@ def count_tokens(dataset_path, model_path, dataset_type):
         dataset = load_from_disk(dataset_path)
         total_tokens = 0
 
+        num_labels = 0
+        if "train" in dataset:
+            names = set(dataset["train"].column_names)
+            if "label" in names:
+                num_labels=len(set(dataset["train"]["label"]))
+            elif "labels" in names:                
+                num_labels=len(set(dataset["train"]["labels"]))
+            else:
+                print(f"Not found label in dataset", file=sys.stderr)
         model_config = transformers.AutoConfig.from_pretrained(
             model_path,
-            num_labels=len(set(dataset["train"]["label"])),
+            num_labels=num_labels,
             finetuning_task="image-classification",
         )
 
