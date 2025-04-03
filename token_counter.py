@@ -14,7 +14,7 @@ def get_num_train_epochs(training_config):
         try:
             with open(training_config, "r") as file:
                 config = json.load(file)
-                num_train_epochs = config.get("num_train_epochs", 3)
+                num_train_epochs = config.get("num_train_epochs", config.get("total_step", num_train_epochs))
         except Exception as e:
             print(
                 f"An error occurred during read training config: {e}", file=sys.stderr
