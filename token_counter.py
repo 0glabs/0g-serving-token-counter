@@ -14,7 +14,9 @@ def get_num_train_epochs(training_config):
         try:
             with open(training_config, "r") as file:
                 config = json.load(file)
-                num_train_epochs = config.get("num_train_epochs", config.get("total_step", num_train_epochs))
+                num_train_epochs = config.get(
+                    "num_train_epochs", config.get("total_step", num_train_epochs)
+                )
         except Exception as e:
             print(
                 f"An error occurred during read training config: {e}", file=sys.stderr
@@ -38,15 +40,30 @@ def count_tokens(dataset_path, model_path, dataset_type):
                 default_model_path, trust_remote_code=True
             )
 
-        dataset = load_from_disk(dataset_path)
         total_tokens = 0
-        for _, ds in dataset.items():
-            for example in ds:
-                for key in ["text", "input", "output"]:
-                    if key in example:
-                        total_tokens += len(encoding.encode(example[key]))
+
+        try:
+            dataset = load_from_disk(dataset_path)
+
+            for _, ds in dataset.items():
+                for example in ds:
+                    for key in ["text", "input", "output"]:
+                        if key in example:
+                            total_tokens += len(encoding.encode(example[key]))
+        except FileNotFoundError:
+            with open(dataset_path) as f:
+                cot_data = json.load(f)
+
+            for k, v in cot_data.items():
+                total_tokens += len(
+                    encoding(str(k) + " " + str(v) + "\n\n")["input_ids"]
+                )
+
+        except Exception as e:
+            raise e
 
         return total_tokens
+
     elif dataset_type == "image":
         dataset = load_from_disk(dataset_path)
         total_tokens = 0
