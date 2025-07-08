@@ -45,11 +45,31 @@ def count_tokens(dataset_path, model_path, dataset_type):
         try:
             dataset = load_from_disk(dataset_path)
 
+            def iter_dict(encoding, data):
+                if isinstance(data, str):
+                    return len(encoding.encode(data))
+
+                elif isinstance(data, dict):
+                    res = 0
+                    for _, value in data.items():
+                        res += iter_dict(encoding, value)
+                    return res
+
+                elif isinstance(data, (list, tuple, set)):
+                    res = 0
+                    for value in data:
+                        res += iter_dict(encoding, value)
+                    return res
+
+                elif isinstance(data, (float, int, bool)):
+                    return len(encoding.encode(str(data)))
+
+                else:
+                    raise ValueError(f"Unknown data type: {type(data)}")
+
             for _, ds in dataset.items():
                 for example in ds:
-                    for key in ["text", "input", "output"]:
-                        if key in example:
-                            total_tokens += len(encoding.encode(example[key]))
+                    total_tokens += iter_dict(encoding, example)
         except FileNotFoundError:
             with open(dataset_path) as f:
                 cot_data = json.load(f)
