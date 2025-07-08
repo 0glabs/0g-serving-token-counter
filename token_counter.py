@@ -65,7 +65,7 @@ def count_tokens(dataset_path, model_path, dataset_type):
                     return len(encoding.encode(str(data)))
 
                 else:
-                    raise ValueError("Unknown data type")
+                    raise ValueError(f"Unknown data type: {type(data)}")
 
             for _, ds in dataset.items():
                 for example in ds:
